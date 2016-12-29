@@ -46,11 +46,7 @@ def parse_sitemap(url, verbose):
         return False
     # we do this in parallel now
     # @see http://sebastianraschka.com/Articles/2014_multiprocessing.html
-    url_strings = []
-    for u in urls:
-        url_strings.append(u.find('loc').string)
-
-    processes = [mp.Process(target=get_status_code, args=(x, verbose)) for x in url_strings]
+    processes = [mp.Process(target=get_status_code, args=(url.find('loc').string, verbose)) for url in urls]
     for p in processes:
         p.start()
     for p in processes:
