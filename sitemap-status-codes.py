@@ -1,8 +1,8 @@
-#/usr/bin/python3
+# /usr/bin/python3
 import bs4 as bs
 import multiprocessing as mp
-from argparse import ArgumentParser
 import requests
+from argparse import ArgumentParser
 
 
 def parse_sitemap_xml(url, verbose):
@@ -44,15 +44,13 @@ def parse_sitemap(url, verbose):
     # no urls? bail
     if not urls:
         return False
-
-    # lets do this in parallel
-
-    urlStrings = []
-    for u in urls:
-        urlStrings.append(u.find('loc').string)
-
     # we do this in parallel now
-    processes = [mp.Process(target=get_status_code, args=(x, verbose)) for x in urlStrings]
+    # @see http://sebastianraschka.com/Articles/2014_multiprocessing.html
+    url_strings = []
+    for u in urls:
+        url_strings.append(u.find('loc').string)
+
+    processes = [mp.Process(target=get_status_code, args=(x, verbose)) for x in url_strings]
     for p in processes:
         p.start()
     for p in processes:
@@ -61,9 +59,7 @@ def parse_sitemap(url, verbose):
 
 def get_status_code(url, verbose):
     resp = requests.get(url)
-    if 200 != resp.status_code:
-        print(resp.status_code, str(url))
-    if verbose:
+    if verbose or 200 != resp.status_code:
         print(resp.status_code, str(url))
 
 
