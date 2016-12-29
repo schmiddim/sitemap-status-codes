@@ -1,7 +1,9 @@
 #/usr/bin/python3
 import bs4 as bs
+import multiprocessing as mp
 from argparse import ArgumentParser
 import requests
+
 
 def parse_sitemap_xml(url, verbose):
     resp = requests.get(url)
@@ -32,6 +34,7 @@ def parse_sitemap(url, verbose):
 
     # BeautifulStoneSoup to parse the document
     soup = bs.BeautifulSoup(resp.content, 'xml')
+
     # find all the <url> tags in the document
     urls = soup.findAll('url')
 
@@ -42,14 +45,26 @@ def parse_sitemap(url, verbose):
     if not urls:
         return False
 
-    # extract what we need from the url
+    # lets do this in parallel
+
+    urlStrings = []
     for u in urls:
-        loc = u.find('loc').string
-        resp = requests.get(loc)
-        if 200 != resp.status_code:
-            print(resp.status_code, str(loc))
-        if verbose:
-            print(resp.status_code, str(loc))
+        urlStrings.append(u.find('loc').string)
+
+    # we do this in parallel now
+    processes = [mp.Process(target=get_status_code, args=(x, verbose)) for x in urlStrings]
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()
+
+
+def get_status_code(url, verbose):
+    resp = requests.get(url)
+    if 200 != resp.status_code:
+        print(resp.status_code, str(url))
+    if verbose:
+        print(resp.status_code, str(url))
 
 
 if __name__ == '__main__':
