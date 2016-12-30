@@ -1,4 +1,3 @@
-# /usr/bin/python3
 import bs4 as bs
 import multiprocessing as mp
 import requests
